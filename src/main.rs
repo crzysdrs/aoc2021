@@ -51,7 +51,7 @@ where
     }
 }
 
-type IoFn = Box<dyn Fn() -> IoResult<()>>;
+type IoFn = fn() -> IoResult<()>;
 macro_rules! tests {
     ($($name:ident),*) => {
         $(
@@ -62,8 +62,8 @@ macro_rules! tests {
                 $(
                     (
                         $name::Solution::DAY,
-                        (Box::new($name::Solution::run_p1) as IoFn,
-                         Box::new($name::Solution::run_p2) as IoFn)
+                        ($name::Solution::run_p1 as IoFn,
+                         $name::Solution::run_p2 as IoFn)
                     ),
                 )*
             ].into_iter().collect()
