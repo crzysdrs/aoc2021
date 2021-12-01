@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "aoc2020"
+name = "aoc2021"
 version = "0.1.0"
 dependencies = [
  "cgmath",

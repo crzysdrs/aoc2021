@@ -20,7 +20,7 @@ where
     type Sol1: std::fmt::Display;
     type Sol2: std::fmt::Display;
     fn input() -> PathBuf {
-        let input = PathBuf::from("input").join(format!("day{}.txt", Self::DAY));
+        let input = PathBuf::from("input").join(format!("day{:02}.txt", Self::DAY));
         if !input.exists() {
             panic!("Input does not exist: {}", input.display());
         }
@@ -71,7 +71,7 @@ macro_rules! tests {
     }
 }
 
-tests!(template);
+tests!(template, day01);
 
 fn main() -> std::io::Result<()> {
     let opts: Opts = Opts::parse();
