@@ -14,25 +14,14 @@ impl Day for Solution {
     where
         R: std::io::BufRead,
     {
-        r.lines()
-            .map(|v| {
-                Ok(v?.parse::<u32>().unwrap()
-                )
-            })
-            .collect()
+        r.lines().map(|v| Ok(v?.parse::<u32>().unwrap())).collect()
     }
     fn p1(v: &Self::Input) -> Self::Sol1 {
-        v.windows(2)
-            .map(|vs| vs[1] > vs[0])
-            .filter(|v| *v)
-            .count()
-            
+        v.windows(2).map(|vs| vs[1] > vs[0]).filter(|v| *v).count()
     }
     fn p2(v: &Self::Input) -> Self::Sol2 {
-        let v = v.windows(3)
-            .map(|vs| vs.iter().sum())
-            .collect::<Vec<u32>>();
-        Solution::p1(&v)           
+        let v = v.windows(3).map(|vs| vs.iter().sum()).collect::<Vec<u32>>();
+        Solution::p1(&v)
     }
 }
 
@@ -51,7 +40,7 @@ mod test {
                      269\n\
                      260\n\
                      263";
-        
+
         let input = Solution::process_input(std::io::BufReader::new(input.as_bytes())).unwrap();
         assert_eq!(Solution::p1(&input), 7);
         assert_eq!(Solution::p2(&input), 5);
