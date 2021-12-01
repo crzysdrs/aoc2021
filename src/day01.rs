@@ -32,11 +32,7 @@ impl Day for Solution {
         let v = v.windows(3)
             .map(|vs| vs.iter().sum())
             .collect::<Vec<u32>>();
-        v.windows(2)
-            .map(|vs| vs[1] > vs[0])
-            .filter(|v| *v)
-            .count()
-           
+        Solution::p1(&v)           
     }
 }
 
