@@ -71,7 +71,7 @@ macro_rules! tests {
     }
 }
 
-tests!(template, day01);
+tests!(template, day01, day02);
 
 fn main() -> std::io::Result<()> {
     let opts: Opts = Opts::parse();
