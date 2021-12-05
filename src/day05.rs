@@ -5,9 +5,7 @@ use std::collections::*;
 use std::io::Result as IoResult;
 
 fn fill_line(grid: &mut HashMap<Point2<i32>, usize>, (p1, p2): (Point2<i32>, Point2<i32>)) {
-    let mut v = p1 - p2;
-    v.x = if v.x == 0 { 0 } else { v.x / v.x.abs() };
-    v.y = if v.y == 0 { 0 } else { v.y / v.y.abs() };
+    let v = (p1 - p2).map(|c| if c == 0 { 0 } else { c / c.abs() });
 
     let mut cur = p2.clone();
     let end = p1;
