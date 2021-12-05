@@ -4,6 +4,22 @@ use cgmath::Point2;
 use std::collections::*;
 use std::io::Result as IoResult;
 
+fn fill_line(grid: &mut HashMap<Point2<i32>, usize>, (p1, p2): (Point2<i32>, Point2<i32>)) {
+    let mut v = p1 - p2;
+    v.x = if v.x == 0 { 0 } else { v.x / v.x.abs() };
+    v.y = if v.y == 0 { 0 } else { v.y / v.y.abs() };
+
+    let mut cur = p2.clone();
+    let end = p1;
+    loop {
+        grid.entry(cur).and_modify(|v| *v += 1).or_insert(1);
+        if cur == end {
+            break;
+        }
+        cur += v;
+    }
+}
+
 pub struct Solution {}
 impl Day for Solution {
     const DAY: u32 = 5;
@@ -27,45 +43,21 @@ impl Day for Solution {
             .collect()
     }
     fn p1(v: &Self::Input) -> Self::Sol1 {
-        let mut h = HashMap::new();
+        let mut grid = HashMap::new();
         v.iter()
             .filter(|(p1, p2)| p1.x == p2.x || p1.y == p2.y)
-            .for_each(|(p1, p2)| {
-                let min_x = std::cmp::min(p1.x, p2.x);
-                let max_x = std::cmp::max(p1.x, p2.x);
-                let min_y = std::cmp::min(p1.y, p2.y);
-                let max_y = std::cmp::max(p1.y, p2.y);
-                for x in min_x..=max_x {
-                    for y in min_y..=max_y {
-                        println!("{} {}", x, y);
-                        h.entry(Point2::new(x, y))
-                            .and_modify(|v| *v += 1)
-                            .or_insert(1);
-                    }
-                }
-            });
+            .copied()
+            .for_each(|line| fill_line(&mut grid, line));
 
-        h.iter().filter(|(_, v)| **v > 1).count()
+        grid.iter().filter(|(_, v)| **v > 1).count()
     }
     fn p2(v: &Self::Input) -> Self::Sol2 {
-        let mut h = HashMap::new();
-        v.iter().for_each(|(p1, p2)| {
-            let mut v = p1 - p2;
-            v.x = if v.x == 0 { 0 } else { v.x / v.x.abs() };
-            v.y = if v.y == 0 { 0 } else { v.y / v.y.abs() };
-
-            let mut cur = p2.clone();
-            let end = p1;
-            loop {
-                h.entry(cur).and_modify(|v| *v += 1).or_insert(1);
-                if cur == *end {
-                    break;
-                }
-                cur += v;
-            }
+        let mut grid = HashMap::new();
+        v.iter().copied().for_each(|line| {
+            fill_line(&mut grid, line);
         });
 
-        h.iter().filter(|(_, v)| **v > 1).count()
+        grid.iter().filter(|(_, v)| **v > 1).count()
     }
 }
 
