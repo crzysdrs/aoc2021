@@ -63,7 +63,7 @@ mod test {
         let input = "16,1,2,0,4,2,7,1,2,14";
         let input = Solution::process_input(std::io::BufReader::new(input.as_bytes())).unwrap();
         assert_eq!(Solution::p1(&input), 37);
-        assert_eq!(Solution::p2(&input), 206);
+        assert_eq!(Solution::p2(&input), 168);
         //unimplemented!()
     }
 }
