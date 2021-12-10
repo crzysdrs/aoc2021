@@ -72,13 +72,13 @@ impl Day for Solution {
 
         v.iter()
             .map(|x| {
-                let mut found: [Option<(&HashSet<char>)>; 10] = [None; 10];
+                let mut found: [Option<&HashSet<char>>; 10] = [None; 10];
                 // We know the lengths of certain Seven Segments are unique,
                 // we store those found entries here.
-                found[7] = Some((x.signals.iter().find(|x| x.len() == 3).unwrap()));
-                found[1] = Some((x.signals.iter().find(|x| x.len() == 2).unwrap()));
-                found[4] = Some((x.signals.iter().find(|x| x.len() == 4).unwrap()));
-                found[8] = Some((x.signals.iter().find(|x| x.len() == 7).unwrap()));
+                found[7] = Some(x.signals.iter().find(|x| x.len() == 3).unwrap());
+                found[1] = Some(x.signals.iter().find(|x| x.len() == 2).unwrap());
+                found[4] = Some(x.signals.iter().find(|x| x.len() == 4).unwrap());
+                found[8] = Some(x.signals.iter().find(|x| x.len() == 7).unwrap());
 
                 // We know that the segments for 7 minus 1 are going to uniquely identify 'A'
                 let is_seg_a = found[7].unwrap() - found[1].unwrap();
