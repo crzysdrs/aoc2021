@@ -62,7 +62,7 @@ fn dfs2<'n>(
             Some(Node::Start | Node::End) => false,
             Some(Node::SmallCave(_)) => {
                 if two_visits {
-                    path.iter().filter(|node| *node == n).count() < 1
+                    false
                 } else {
                     next_visit = true;
                     true
