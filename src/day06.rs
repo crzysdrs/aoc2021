@@ -33,17 +33,13 @@ impl Day for Solution {
     }
     fn p2(v: &Self::Input) -> Self::Sol2 {
         // Algorithm computes same as p1, but more cleverly.
-        let mut v = v.clone();
-        v.sort();
-        let mut pop: Vec<usize> = vec![0; 9];
-        for x in &v {
+        let mut pop = [0; 9];
+        for x in v {
             pop[*x as usize] += 1;
         }
         for _ in 0..256 {
-            let finished = pop[0];
             pop[7] += pop[0];
             pop.rotate_left(1);
-            pop[8] = finished;
         }
         pop.iter().sum()
     }
