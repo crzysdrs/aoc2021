@@ -11,6 +11,7 @@ pub struct Solution {}
 
 fn run(v: &Polymer, steps: usize) -> usize {
     fn merge(dst: &mut HashMap<char, usize>, src: &HashMap<char, usize>) {
+        // Merge the summation of both hashmaps together.
         src.iter().for_each(|(k, v)| {
             *dst.entry(*k).or_insert(0) += v;
         });
@@ -20,22 +21,33 @@ fn run(v: &Polymer, steps: usize) -> usize {
         lookup: (char, char),
         depth: usize,
     ) -> HashMap<char, usize> {
+        // Try to see if we have computed this subproblem already.
         if let Some(r) = computed.get(&(lookup, depth)) {
             return r.clone();
         }
+        // Lookup the inserted character for this problem
         let (insert, _) = computed.get(&(lookup, 1)).unwrap().iter().nth(0).unwrap();
         let insert = insert.clone();
 
+        //Compute both the left 
         let mut r1 = dp(computed, (lookup.0, insert), depth - 1);
+        // and right subproblems
         let r2 = dp(computed, (insert, lookup.1), depth - 1);
 
+        // Merge the results
         merge(&mut r1, &r2);
+        // Don't forget to add the inserted character.
         *r1.entry(insert).or_insert(0) += 1;
+
+        //Save the subproblem result.
         computed.insert((lookup, depth), r1.clone());
+        
         return r1;
     }
 
     let mut computed = HashMap::new();
+
+    // Compute the base case, where we are just inserting the single character at depth 1.
     v.pairs.iter().for_each(|((c1, c2), o)| {
         computed.insert(((*c1, *c2), 1), [(*o, 1)].into_iter().collect());
     });
@@ -45,18 +57,21 @@ fn run(v: &Polymer, steps: usize) -> usize {
     let mut count = chars
         .windows(2)
         .map(|cs| {
+            // Split up the original problem into each subproblem of two chars.
             let mut total = dp(&mut computed, (cs[0], cs[1]), steps);
-            println!("{:?}", total);
             total
         })
         .fold(HashMap::new(), |mut state, count| {
+            // merge all the results
             merge(&mut state, &count);
             state
         });
+
+    // Don't forget to include the count of the original characters in the problem.
     chars.iter().for_each(|c| {
         *count.entry(*c).or_insert(0) += 1;
     });
-    println!("{:?}", count);
+
     let min = count.iter().min_by_key(|(_, v)| *v).unwrap();
     let max = count.iter().max_by_key(|(_, v)| *v).unwrap();
     max.1 - min.1
@@ -88,26 +103,6 @@ impl Day for Solution {
         Ok(Polymer { template, pairs })
     }
     fn p1(v: &Self::Input) -> Self::Sol1 {
-        // let mut r = v.template.clone();
-        // for _ in 0..10 {
-        //     let mut new_r = String::new();
-        //     println!("{:?}", r);
-        //     (0..r.len() - 1)
-        //         .for_each(|i| {
-        //             let insert = v.pairs.get(&r[i..i+2]).unwrap();
-        //             new_r += &format!("{}{}", r.chars().nth(i).unwrap(), insert);
-        //         });
-
-        //     r = new_r + &r.chars().last().unwrap().to_string();
-        // }
-
-        // let count = r.chars().fold(HashMap::new(), |mut state, c| {
-        //     *state.entry(c).or_insert(0) += 1;
-        //     state
-        // });
-        // let min = count.iter().min_by_key(|(_, v)| *v).unwrap();
-        // let max = count.iter().max_by_key(|(_, v)| *v).unwrap();
-        // max.1 - min.1
         run(v, 10)
     }
     fn p2(v: &Self::Input) -> Self::Sol2 {
