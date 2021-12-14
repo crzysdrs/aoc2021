@@ -58,8 +58,7 @@ fn run(v: &Polymer, steps: usize) -> usize {
         .windows(2)
         .map(|cs| {
             // Split up the original problem into each subproblem of two chars.
-            let mut total = dp(&mut computed, (cs[0], cs[1]), steps);
-            total
+            dp(&mut computed, (cs[0], cs[1]), steps)
         })
         .fold(HashMap::new(), |mut state, count| {
             // merge all the results
