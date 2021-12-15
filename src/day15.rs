@@ -136,9 +136,7 @@ impl Day for Solution {
         let target = (input.len() - 1, input.len() - 1);
 
         while !q.is_empty() {
-            if q.len() % 100 == 0 {
-                println!("{:?}", q.len());
-            }
+            // This is the slow operation, it should be a min heap or priority queue.
             let u = q
                 .iter()
                 .filter(|k| dist.get(k).is_some())
