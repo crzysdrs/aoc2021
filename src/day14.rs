@@ -29,7 +29,7 @@ fn run(v: &Polymer, steps: usize) -> usize {
         let (insert, _) = computed.get(&(lookup, 1)).unwrap().iter().nth(0).unwrap();
         let insert = insert.clone();
 
-        //Compute both the left 
+        //Compute both the left
         let mut r1 = dp(computed, (lookup.0, insert), depth - 1);
         // and right subproblems
         let r2 = dp(computed, (insert, lookup.1), depth - 1);
@@ -41,7 +41,7 @@ fn run(v: &Polymer, steps: usize) -> usize {
 
         //Save the subproblem result.
         computed.insert((lookup, depth), r1.clone());
-        
+
         return r1;
     }
 
