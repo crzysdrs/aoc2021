@@ -41,15 +41,14 @@ impl Day for Solution {
                         continue;
                     }
                     if x % n == 0 {
-                        let vel_x = (n + 1) / 2 + x / n;                        
-                        x_vels.push(vel_x);                        
+                        let vel_x = (n + 1) / 2 + x / n;
+                        x_vels.push(vel_x);
                     }
                     if y % n == 0 {
                         let vel_y = (n + 1) / 2 + y / n;
                         y_vels.push(vel_y);
-                        y_vels.push(-vel_y);                        
+                        y_vels.push(-vel_y);
                     }
-                    
                 }
             }
         }
@@ -99,13 +98,13 @@ impl Day for Solution {
                         continue;
                     }
                     if x % n != 0 {
-                        let vel_x = (n + 1) / 2 + x / n;                        
-                        x_vels.push(vel_x);                        
+                        let vel_x = (n + 1) / 2 + x / n;
+                        x_vels.push(vel_x);
                     }
                     if y % n != 0 {
                         let vel_y = (n + 1) / 2 + y / n;
                         y_vels.push(vel_y);
-                        y_vels.push(-vel_y);                        
+                        y_vels.push(-vel_y);
                     }
                 }
             }
@@ -116,7 +115,7 @@ impl Day for Solution {
 
         y_vels.sort();
         y_vels.dedup();
-        
+
         let mut hits = vec![];
         for vel_x in x_vels.iter().copied() {
             for vel_y in y_vels.iter().copied() {
