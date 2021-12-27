@@ -65,7 +65,7 @@ fn find_map(scanners: &[Scanner]) -> Vec<Scanner> {
     let mut scanners = scanners.to_vec();
     let mut map = vec![scanners.pop().unwrap()];
     use std::sync::RwLock;
-    let mut checked = RwLock::new(HashSet::new());
+    let checked = RwLock::new(HashSet::new());
     'map_done: loop {
         let found = map
             .par_iter()

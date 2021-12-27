@@ -131,9 +131,9 @@ impl Iterator for SnailFishReduce {
                     SnailFish(a, mut b) => {
                         let a = inner_reduce(pass, a, l, Some(&mut b), depth + 1);
                         let mut a = match a {
-                            Action::Stop((v)) => {
+                            Action::Stop(v) => {
                                 return Action::Stop(
-                                    (SnailFishVal::Pair(Box::new(SnailFish(v, b)))),
+                                    SnailFishVal::Pair(Box::new(SnailFish(v, b))),
                                 )
                             }
                             Action::Continue(v) => v,
@@ -141,9 +141,9 @@ impl Iterator for SnailFishReduce {
 
                         let b = inner_reduce(pass, b, Some(&mut a), r, depth + 1);
                         let b = match b {
-                            Action::Stop((v)) => {
+                            Action::Stop(v) => {
                                 return Action::Stop(
-                                    (SnailFishVal::Pair(Box::new(SnailFish(a, v)))),
+                                    SnailFishVal::Pair(Box::new(SnailFish(a, v))),
                                 )
                             }
                             Action::Continue(v) => v,
@@ -154,17 +154,17 @@ impl Iterator for SnailFishReduce {
                 },
                 SnailFishVal::Val(a) if a >= 10 && matches!(pass, Pass::Split) => {
                     return Action::Stop(
-                        (SnailFishVal::Pair(Box::new(SnailFish(
+                        SnailFishVal::Pair(Box::new(SnailFish(
                             SnailFishVal::Val(a / 2),
                             SnailFishVal::Val(a / 2 + a % 2),
-                        )))),
+                        ))),
                     );
                 }
                 SnailFishVal::Val(_) => return Action::Continue(this),
             }
         }
         self.sn.take().map(|sn| {
-            let mut this = SnailFishVal::Pair(Box::new(sn));
+            let this = SnailFishVal::Pair(Box::new(sn));
             //println!("Before {:?}", this);
             let reduced = inner_reduce(Pass::Explode, this, None, None, 0);
             let reduced = match reduced {
