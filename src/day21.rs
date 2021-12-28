@@ -1,8 +1,8 @@
 use crate::Day;
+use itertools::Itertools;
 #[allow(unused_imports)]
 use std::collections::*;
 use std::io::Result as IoResult;
-use itertools::Itertools;
 
 pub struct Players {
     p1: usize,
@@ -92,7 +92,7 @@ impl Day for Solution {
         });
 
         fn run(
-            cart: &HashMap<usize, usize>,           
+            cart: &HashMap<usize, usize>,
             mut players: (Player, Player),
             turn: usize,
             roll: usize,
