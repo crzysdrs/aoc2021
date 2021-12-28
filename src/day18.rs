@@ -132,9 +132,7 @@ impl Iterator for SnailFishReduce {
                         let a = inner_reduce(pass, a, l, Some(&mut b), depth + 1);
                         let mut a = match a {
                             Action::Stop(v) => {
-                                return Action::Stop(
-                                    SnailFishVal::Pair(Box::new(SnailFish(v, b))),
-                                )
+                                return Action::Stop(SnailFishVal::Pair(Box::new(SnailFish(v, b))))
                             }
                             Action::Continue(v) => v,
                         };
@@ -142,9 +140,7 @@ impl Iterator for SnailFishReduce {
                         let b = inner_reduce(pass, b, Some(&mut a), r, depth + 1);
                         let b = match b {
                             Action::Stop(v) => {
-                                return Action::Stop(
-                                    SnailFishVal::Pair(Box::new(SnailFish(a, v))),
-                                )
+                                return Action::Stop(SnailFishVal::Pair(Box::new(SnailFish(a, v))))
                             }
                             Action::Continue(v) => v,
                         };
@@ -153,12 +149,10 @@ impl Iterator for SnailFishReduce {
                     }
                 },
                 SnailFishVal::Val(a) if a >= 10 && matches!(pass, Pass::Split) => {
-                    return Action::Stop(
-                        SnailFishVal::Pair(Box::new(SnailFish(
-                            SnailFishVal::Val(a / 2),
-                            SnailFishVal::Val(a / 2 + a % 2),
-                        ))),
-                    );
+                    return Action::Stop(SnailFishVal::Pair(Box::new(SnailFish(
+                        SnailFishVal::Val(a / 2),
+                        SnailFishVal::Val(a / 2 + a % 2),
+                    ))));
                 }
                 SnailFishVal::Val(_) => return Action::Continue(this),
             }
