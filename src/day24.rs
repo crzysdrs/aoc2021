@@ -4,7 +4,7 @@ use std::collections::*;
 use std::io::Result as IoResult;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug,Copy,Clone,Eq,PartialEq)]
 pub enum Reg {
     W,
     X,
@@ -40,6 +40,13 @@ impl Op {
             Op::Reg(r) => *alu.reg(r),
         }
     }
+
+    fn reg(&self) -> Option<Reg> {
+        match self {
+            Op::Reg(reg) => Some(*reg),
+            _ => None,
+        }        
+    }
 }
 
 impl FromStr for Op {
@@ -66,7 +73,7 @@ pub enum Instr {
 
 #[derive(Debug,Eq,PartialEq)]
 enum AluErr {
-    NeedInput,
+    NeedInput(Reg),
 }
 
 impl Instr {
@@ -84,11 +91,33 @@ impl Instr {
                 *alu.reg_mut(d) = if let Some(i) = input.next() {
                     i
                 } else {
-                    return Err(AluErr::NeedInput);
+                    return Err(AluErr::NeedInput(*d));
                 }
             }
         }
         Ok(())
+    }
+    fn reads(&self) -> Vec<Reg> {
+        let regs = match self {
+            Instr::Mul(l, r) |
+            Instr::Add(l, r) | 
+            Instr::Div(l, r) | 
+            Instr::Mod(l, r) |
+            Instr::Eq(l, r) =>  [Some(*l), r.reg()].to_vec(),
+            Instr::Inp(_d) => [].to_vec()
+        };
+        regs.into_iter().flatten().collect()
+    }
+    fn writes(&self) -> Vec<Reg> {
+        let regs = match self {
+            Instr::Mul(l, _r) |
+            Instr::Add(l, _r) | 
+            Instr::Div(l, _r) | 
+            Instr::Mod(l, _r) |
+            Instr::Eq(l, _r) =>  [Some(*l)].to_vec(),
+            Instr::Inp(d) => [Some(*d)].to_vec()
+        };
+        regs.into_iter().flatten().collect()
     }
 }
 
@@ -119,6 +148,7 @@ impl FromStr for Instr {
     }
 }
 
+#[derive(Hash,PartialEq,Eq,Clone)]
 struct Alu {
     x: i32,
     y: i32,
@@ -163,7 +193,10 @@ impl Alu {
     }
 }
 
-fn digits(v: &Vec<Instr>, max: bool) -> i64 {
+fn digits(v: &Vec<Instr>, max: bool) -> u64 {
+    for x in v {
+        println!("{:?}", x);
+    }
     //Split up all instructions into sets separated by input requests
     let instr_ranges = v
         .iter()
@@ -174,18 +207,22 @@ fn digits(v: &Vec<Instr>, max: bool) -> i64 {
     
     //Keep track of alu.z value after each step, and digits that led to it.
     let mut prev_z = HashMap::new();
-    prev_z.insert(0, 0i64);
+    let mut alu = Alu::default();
+    let _ = alu.run(&v, std::iter::empty());
+    prev_z.insert(alu, 0u64);
 
     for (i, range) in instr_ranges.iter().enumerate() {
         let mut valid_z = HashMap::new();        
         for d in 1..10 {
-            for (z, digits) in &prev_z {
-                let mut alu = Alu::default();
-                //Preload z value.
-                alu.z = *z;
+            for (alu, digits) in &prev_z {
+                let mut alu = alu.clone();
                 let result = alu.run(&v[range.clone()], [d].into_iter());
                 let store_z = match result {
-                    Err(AluErr::NeedInput) => true,
+                    Err(AluErr::NeedInput(d)) => {
+                        // we can set a register to a default state, since we are going to overwrite it.
+                        *alu.reg_mut(&d) = 0;
+                        true
+                    },
                     Ok(_) if alu.z == 0 => true,
                     _ => false
                 };
@@ -193,9 +230,9 @@ fn digits(v: &Vec<Instr>, max: bool) -> i64 {
                 if store_z {
                     let mut new_digits = *digits;
                     new_digits *= 10;
-                    new_digits += d as i64;
+                    new_digits += d as u64;
 
-                    let old_digits = valid_z.entry(alu.z).or_insert_with(|| new_digits);
+                    let old_digits = valid_z.entry(alu).or_insert_with(|| new_digits);
                     use std::cmp::Ordering;
                     // Keep only max/min digits value for a target z value
                     let replace = match (*old_digits).cmp(&new_digits) {
@@ -213,24 +250,62 @@ fn digits(v: &Vec<Instr>, max: bool) -> i64 {
         println!("{} Prev Z: {:?}", i, prev_z.len());
     }
 
-    prev_z[&0]
+    let remain = prev_z.iter().map(|(_alu, digits)| digits);
+    *if max {
+        remain.max()
+    } else {
+        remain.min()
+    }.unwrap()
 }
 
 pub struct Solution {}
 impl Day for Solution {
     const DAY: u32 = 24;
     type Input = Vec<Instr>;
-    type Sol1 = i64;
-    type Sol2 = i64;
+    type Sol1 = u64;
+    type Sol2 = u64;
 
     fn process_input<R>(r: R) -> IoResult<Self::Input>
     where
         R: std::io::BufRead,
     {
-        r.lines()
+        let mut instr :Vec<_> = r.lines()
             .flatten()
-            .map(|l| Ok(l.parse().unwrap()))
-            .collect()
+            .map(|l| l.parse().unwrap())
+            .collect::<Vec<_>>();
+
+        // Useless instructions
+        instr.retain(|i| match i {
+            Instr::Div(_, Op::Imm(1)) | Instr::Mul(_, Op::Imm(1)) | Instr::Add(_, Op::Imm(0)) => false,
+            _ => true,
+        });
+
+        
+
+        // Hoist instructions
+        for _ in 0..10 {
+        for i in 1..instr.len() {
+            let target = instr.iter().enumerate().take(i).rev().take_while(
+                |(_j, target)| {
+                    // Can't move input instructions relative to each other
+                    // !matches!((&instr[i], target), (Instr::Inp(_), Instr::Inp(_)))
+                    // Instead... don't move inputs, we prefer this behavior anyway for caching.
+                    !matches!(&instr[i], Instr::Inp(_))
+                        // Can't move instruction that reads from anything that will be written
+                        && !instr[i].reads().iter().any(|r| target.writes().contains(r))
+                        // Can't move instruction that writes to anything read/written
+                        && !instr[i].writes().iter().any(|w| target.reads().contains(w) || target.writes().contains(w))
+                }
+            ).map(|(j, _)| j).next();
+            if let Some(t) = target {
+                println!("Swapped {}:{:?} {}:{:?}", t, instr[t], i, instr[i]);
+                instr.swap(t, i);
+            }
+        }
+        }
+        
+        
+        Ok(instr)
     }
     fn p1(v: &Self::Input) -> Self::Sol1 {
         digits(v, true)
