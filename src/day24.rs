@@ -4,7 +4,7 @@ use std::collections::*;
 use std::io::Result as IoResult;
 use std::str::FromStr;
 
-#[derive(Debug,Copy,Clone,Eq,PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Reg {
     W,
     X,
@@ -45,7 +45,7 @@ impl Op {
         match self {
             Op::Reg(reg) => Some(*reg),
             _ => None,
-        }        
+        }
     }
 }
 
@@ -71,7 +71,7 @@ pub enum Instr {
     Inp(Reg),
 }
 
-#[derive(Debug,Eq,PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 enum AluErr {
     NeedInput(Reg),
 }
@@ -99,23 +99,23 @@ impl Instr {
     }
     fn reads(&self) -> Vec<Reg> {
         let regs = match self {
-            Instr::Mul(l, r) |
-            Instr::Add(l, r) | 
-            Instr::Div(l, r) | 
-            Instr::Mod(l, r) |
-            Instr::Eq(l, r) =>  [Some(*l), r.reg()].to_vec(),
-            Instr::Inp(_d) => [].to_vec()
+            Instr::Mul(l, r)
+            | Instr::Add(l, r)
+            | Instr::Div(l, r)
+            | Instr::Mod(l, r)
+            | Instr::Eq(l, r) => [Some(*l), r.reg()].to_vec(),
+            Instr::Inp(_d) => [].to_vec(),
         };
         regs.into_iter().flatten().collect()
     }
     fn writes(&self) -> Vec<Reg> {
         let regs = match self {
-            Instr::Mul(l, _r) |
-            Instr::Add(l, _r) | 
-            Instr::Div(l, _r) | 
-            Instr::Mod(l, _r) |
-            Instr::Eq(l, _r) =>  [Some(*l)].to_vec(),
-            Instr::Inp(d) => [Some(*d)].to_vec()
+            Instr::Mul(l, _r)
+            | Instr::Add(l, _r)
+            | Instr::Div(l, _r)
+            | Instr::Mod(l, _r)
+            | Instr::Eq(l, _r) => [Some(*l)].to_vec(),
+            Instr::Inp(d) => [Some(*d)].to_vec(),
         };
         regs.into_iter().flatten().collect()
     }
@@ -148,7 +148,7 @@ impl FromStr for Instr {
     }
 }
 
-#[derive(Hash,PartialEq,Eq,Clone)]
+#[derive(Hash, PartialEq, Eq, Clone)]
 struct Alu {
     x: i32,
     y: i32,
@@ -189,7 +189,9 @@ impl Alu {
     where
         I: Iterator<Item = i32>,
     {
-        instr.iter().try_for_each(|instr| instr.run(self, &mut input))
+        instr
+            .iter()
+            .try_for_each(|instr| instr.run(self, &mut input))
     }
 }
 
@@ -204,7 +206,7 @@ fn digits(v: &Vec<Instr>, max: bool) -> u64 {
         .filter(|(_, x)| matches!(x, Instr::Inp(_)))
         .map(|(i, _)| i..)
         .collect::<Vec<_>>();
-    
+
     //Keep track of alu.z value after each step, and digits that led to it.
     let mut prev_z = HashMap::new();
     let mut alu = Alu::default();
@@ -212,7 +214,7 @@ fn digits(v: &Vec<Instr>, max: bool) -> u64 {
     prev_z.insert(alu, 0u64);
 
     for (i, range) in instr_ranges.iter().enumerate() {
-        let mut valid_z = HashMap::new();        
+        let mut valid_z = HashMap::new();
         for d in 1..10 {
             for (alu, digits) in &prev_z {
                 let mut alu = alu.clone();
@@ -222,9 +224,9 @@ fn digits(v: &Vec<Instr>, max: bool) -> u64 {
                         // we can set a register to a default state, since we are going to overwrite it.
                         *alu.reg_mut(&d) = 0;
                         true
-                    },
+                    }
                     Ok(_) if alu.z == 0 => true,
-                    _ => false
+                    _ => false,
                 };
                 //println!("{:?}", result);
                 if store_z {
@@ -251,11 +253,7 @@ fn digits(v: &Vec<Instr>, max: bool) -> u64 {
     }
 
     let remain = prev_z.iter().map(|(_alu, digits)| digits);
-    *if max {
-        remain.max()
-    } else {
-        remain.min()
-    }.unwrap()
+    *if max { remain.max() } else { remain.min() }.unwrap()
 }
 
 pub struct Solution {}
@@ -269,23 +267,24 @@ impl Day for Solution {
     where
         R: std::io::BufRead,
     {
-        let mut instr :Vec<_> = r.lines()
+        let mut instr: Vec<_> = r
+            .lines()
             .flatten()
             .map(|l| l.parse().unwrap())
             .collect::<Vec<_>>();
 
         // Useless instructions
         instr.retain(|i| match i {
-            Instr::Div(_, Op::Imm(1)) | Instr::Mul(_, Op::Imm(1)) | Instr::Add(_, Op::Imm(0)) => false,
+            Instr::Div(_, Op::Imm(1)) | Instr::Mul(_, Op::Imm(1)) | Instr::Add(_, Op::Imm(0)) => {
+                false
+            }
             _ => true,
         });
 
-        
-
         // Hoist instructions
         for _ in 0..10 {
-        for i in 1..instr.len() {
-            let target = instr.iter().enumerate().take(i).rev().take_while(
+            for i in 1..instr.len() {
+                let target = instr.iter().enumerate().take(i).rev().take_while(
                 |(_j, target)| {
                     // Can't move input instructions relative to each other
                     // !matches!((&instr[i], target), (Instr::Inp(_), Instr::Inp(_)))
@@ -297,14 +296,13 @@ impl Day for Solution {
                         && !instr[i].writes().iter().any(|w| target.reads().contains(w) || target.writes().contains(w))
                 }
             ).map(|(j, _)| j).next();
-            if let Some(t) = target {
-                println!("Swapped {}:{:?} {}:{:?}", t, instr[t], i, instr[i]);
-                instr.swap(t, i);
+                if let Some(t) = target {
+                    println!("Swapped {}:{:?} {}:{:?}", t, instr[t], i, instr[i]);
+                    instr.swap(t, i);
+                }
             }
         }
-        }
-        
-        
+
         Ok(instr)
     }
     fn p1(v: &Self::Input) -> Self::Sol1 {
@@ -325,7 +323,7 @@ mod test {
         let input = Solution::process_input(std::io::BufReader::new(input.as_bytes())).unwrap();
         for x in 0..10 {
             let mut alu = Alu::default();
-            assert_eq!(alu.run(&input, [x].into_iter()), Ok(()));                                     
+            assert_eq!(alu.run(&input, [x].into_iter()), Ok(()));
             assert_eq!(-x, alu.x);
         }
 
@@ -337,7 +335,7 @@ mod test {
         for x in 1..100 {
             for y in 1..100 {
                 let mut alu = Alu::default();
-                assert_eq!(alu.run(&input, [x,y].into_iter()), Ok(()));
+                assert_eq!(alu.run(&input, [x, y].into_iter()), Ok(()));
                 assert_eq!(alu.z, if 3 * x == y { 1 } else { 0 });
             }
         }
@@ -373,15 +371,14 @@ mod test {
     fn p1() {
         let input = std::fs::read("input/day24.txt").unwrap();
         let input = Solution::process_input(std::io::BufReader::new(input.as_slice())).unwrap();
-        
+
         assert_eq!(Solution::p1(&input), 39494195799979);
     }
     #[test]
     fn p2() {
         let input = std::fs::read("input/day24.txt").unwrap();
         let input = Solution::process_input(std::io::BufReader::new(input.as_slice())).unwrap();
-        
+
         assert_eq!(Solution::p2(&input), 13161151139617);
     }
-    
 }
