@@ -345,19 +345,20 @@ fn run(v: Burrow) -> usize {
 
         amps.sort_by_key(|(p, a)| (p.x, p.y, *a));
 
-        if states.get(&amps).map(|e| *e < energy).unwrap_or(false) {
+        if states.get(&amps).map(|e| *e <= energy).unwrap_or(false) {
             return None;
         }
         states.insert(amps.clone(), energy);
 
         amps.into_iter()
             .flat_map(|(amp_pos, amp)| {
-                let legal_endpoint: Vec<_> = burrow
+                let mut legal_endpoint: Vec<_> = burrow
                     .burrow
                     .iter()
                     .filter(|(p, _b)| burrow.can_move(amp, amp_pos, **p))
                     .collect();
-
+                legal_endpoint.sort_by_key(|(p, _)| dist.get(&amp_pos).unwrap().get(&node_indices[&p]).unwrap());
+                    
                 let mut reachable = HashSet::new();
 
                 petgraph::visit::depth_first_search(
